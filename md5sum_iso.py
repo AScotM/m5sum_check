@@ -1,21 +1,27 @@
 import hashlib
-import os
+import pathlib
+import io
 
 def calculate_md5(file_path):
+    """Calculate MD5 checksum for a given file."""
     md5 = hashlib.md5()
-    with open(file_path, 'rb') as f:
-        for chunk in iter(lambda: f.read(4096), b''):
-            md5.update(chunk)
-    return md5.hexdigest()
+    try:
+        with file_path.open('rb') as f:
+            for chunk in iter(lambda: f.read(io.DEFAULT_BUFFER_SIZE), b''):
+                md5.update(chunk)
+        return md5.hexdigest()
+    except (OSError, IOError) as e:
+        return f"Error: {e}"
 
 def check_md5sums(directory):
-    for filename in os.listdir(directory):
-        filepath = os.path.join(directory, filename)
-        if os.path.isfile(filepath):
-            if filename.lower().endswith('.iso'):
-                md5_hash = calculate_md5(filepath)
-                print(f"File: {filename}, MD5: {md5_hash}")
+    """Scan a directory for `.iso` files and calculate their MD5 hashes."""
+    dir_path = pathlib.Path(directory)
+    
+    for file in dir_path.iterdir():
+        if file.is_file() and file.suffix.lower() == '.iso':
+            md5_hash = calculate_md5(file)
+            print(f"{file.name:40} MD5: {md5_hash}")
 
-directory_path = '.'
-check_md5sums(directory_path)
-
+# Run function in current directory
+if __name__ == "__main__":
+    check_md5sums(pathlib.Path("."))
