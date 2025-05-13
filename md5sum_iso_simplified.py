@@ -1,6 +1,7 @@
 import hashlib
 import pathlib
 import io
+import sys
 
 def calculate_md5(file_path):
     """Calculate MD5 checksum for a given file."""
@@ -11,17 +12,20 @@ def calculate_md5(file_path):
                 md5.update(chunk)
         return md5.hexdigest()
     except (OSError, IOError) as e:
-        return f"Error: {e}"
+        return f"Error reading {file_path.name}: {e}"
 
 def check_md5sums(directory):
     """Scan a directory for `.iso` files and calculate their MD5 hashes."""
     dir_path = pathlib.Path(directory)
-    
+
+    if not dir_path.is_dir():
+        print(f"Invalid directory: {directory}")
+        return
+
     for file in dir_path.iterdir():
         if file.is_file() and file.suffix.lower() == '.iso':
             md5_hash = calculate_md5(file)
             print(f"{file.name:40} MD5: {md5_hash}")
 
-# Run function in current directory
 if __name__ == "__main__":
     check_md5sums(pathlib.Path("."))
